@@ -13,7 +13,7 @@ const JobListings = () => {
   const [actionLoading, setActionLoading] = useState(false);
 
   const [isJobApplicationModalOpen, setIsJobApplicationModalOpen] =
-    useState(false);
+      useState(false);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
   const [confirmationMessage, setConfirmationMessage] = useState("");
@@ -56,7 +56,7 @@ const JobListings = () => {
         closeApplicationModal();
 
         setConfirmationMessage(
-          `Successfully applied to the job: ${selectedJob?.position} at ${selectedJob?.company}`
+            `Successfully applied to the job: ${selectedJob?.position} at ${selectedJob?.company}`
         );
 
         openConfirmationModal();
@@ -66,7 +66,7 @@ const JobListings = () => {
       closeApplicationModal();
 
       setConfirmationMessage(
-        "Some error occurred while applying for the job. Kindly try again!"
+          "Some error occurred while applying for the job. Kindly try again!"
       );
 
       openConfirmationModal();
@@ -81,15 +81,15 @@ const JobListings = () => {
 
       if (deleteResponse.status === 204) {
         const removeResponse = await api.post(
-          `/api/v1/recruiters/${userData.email}/removejob`,
-          job.id
+            `/api/v1/recruiters/${userData.email}/removejob`,
+            job.id
         );
 
         if (removeResponse.status === 200) {
           setJobs(jobs.filter((item) => item.id !== job.id));
 
           setConfirmationMessage(
-            `Successfully deleted the job: ${job?.position} at ${job?.company}`
+              `Successfully deleted the job: ${job?.position} at ${job?.company}`
           );
 
           openConfirmationModal();
@@ -102,7 +102,7 @@ const JobListings = () => {
       setActionLoading(false);
 
       setConfirmationMessage(
-        "Some error occurred while deleting the job. Kindly try again!"
+          "Some error occurred while deleting the job. Kindly try again!"
       );
 
       openConfirmationModal();
@@ -110,40 +110,43 @@ const JobListings = () => {
   };
 
   return (
-    <div className="pt-40 px-32">
-      {isLoading ? (
-        <div>
-          <p className="text-white text-lg font-bold">Loading...</p>
-        </div>
-      ) : jobs.length > 0 ? (
-        <JobsList
-          actionLoading={actionLoading}
-          jobs={jobs}
-          onApply={openApplicationModal}
-          onDelete={deleteJob}
-          setSelectedJob={setSelectedJob}
+      <div className="pt-40 px-32">
+        {isLoading ? (
+            <div>
+              <p className="text-white text-lg font-bold">Loading...</p>
+            </div>
+        ) : (
+            <>
+              <JobsList
+                  actionLoading={actionLoading}
+                  jobs={jobs}
+                  onApply={openApplicationModal}
+                  onDelete={deleteJob}
+                  setSelectedJob={setSelectedJob}
+              />
+              {jobs.length === 0 && (
+                  <div>
+                    <p className="text-white text-lg font-bold">
+                      No available jobs to show! Kindly check later
+                    </p>
+                  </div>
+              )}
+            </>
+        )}
+
+        <JobApplication
+            isOpen={isJobApplicationModalOpen}
+            onClose={closeApplicationModal}
+            job={selectedJob}
+            applyForJob={applyForJob}
         />
-      ) : (
-        <div>
-          <p className="text-white text-lg font-bold">
-            No available jobs to show! Kindly check later
-          </p>
-        </div>
-      )}
 
-      <JobApplication
-        isOpen={isJobApplicationModalOpen}
-        onClose={closeApplicationModal}
-        job={selectedJob}
-        applyForJob={applyForJob}
-      />
-
-      <Confirmation
-        isOpen={isConfirmationModalOpen}
-        onClose={closeConfirmationModal}
-        message={confirmationMessage}
-      />
-    </div>
+        <Confirmation
+            isOpen={isConfirmationModalOpen}
+            onClose={closeConfirmationModal}
+            message={confirmationMessage}
+        />
+      </div>
   );
 };
 
