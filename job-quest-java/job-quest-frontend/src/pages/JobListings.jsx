@@ -78,34 +78,39 @@ const JobListings = () => {
 
     try {
       const deleteResponse = await api.delete(`/api/v1/jobs/${job.id}`);
+      const deleteOk = deleteResponse.status === 204 || deleteResponse.status === 200;
 
-      if (deleteResponse.status === 204) {
-        const removeResponse = await api.post(
-            `/api/v1/recruiters/${userData.email}/removejob`,
-            job.id
+      if (deleteOk) {
+        // Optimistically update UI on successful deletion
+        setJobs(jobs.filter((item) => item.id !== job.id));
+        setConfirmationMessage(
+            `Successfully deleted the job: ${job?.position} at ${job?.company}`
         );
+        openConfirmationModal();
 
-        if (removeResponse.status === 200) {
-          setJobs(jobs.filter((item) => item.id !== job.id));
-
-          setConfirmationMessage(
-              `Successfully deleted the job: ${job?.position} at ${job?.company}`
+        // Best-effort unlink from recruiter, ignore failures
+        try {
+          await api.post(
+              `/api/v1/recruiters/${userData.email}/removejob`,
+              job.id
           );
-
-          openConfirmationModal();
+        } catch (unlinkError) {
+          console.log(unlinkError);
         }
-
-        setActionLoading(false);
+      } else {
+        setConfirmationMessage(
+            "Some error occurred while deleting the job. Kindly try again!"
+        );
+        openConfirmationModal();
       }
     } catch (error) {
       console.log(error);
-      setActionLoading(false);
-
       setConfirmationMessage(
           "Some error occurred while deleting the job. Kindly try again!"
       );
-
       openConfirmationModal();
+    } finally {
+      setActionLoading(false);
     }
   };
 
