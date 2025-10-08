@@ -61,8 +61,12 @@ const PostJobForm = () => {
       if (jobResponse.status === 201) {
         const appendResponse = await api.post(
           `/api/v1/recruiters/${userData?.email}/appendjob`,
-          jobResponse.data.id
+          // jobResponse.data.id ⭐⭐⭐⭐
+            { jobId: jobResponse.data.id } // ✅ Sửa ở đây
         );
+        console.log("jobResponse", jobResponse.data);
+        console.log("appendjob URL:", `/api/v1/recruiters/${userData?.email}/appendjob`);
+        console.log("body gửi:", { jobId: jobResponse.data.id });
 
         if (appendResponse.status === 200) {
           dispatch(addJobIdToRecruiter({ jobId: jobResponse.data.id }));
@@ -74,8 +78,10 @@ const PostJobForm = () => {
         setIsLoading(false);
       }
     } catch (error) {
-      console.log(error);
-      setError("Something went wrong!");
+      // console.log(error);
+      // setError("Something went wrong!");
+      console.error("Error when creating job:", error.response || error);
+      setError(error.response?.data?.message || "Something went wrong!");
       setIsLoading(false);
     }
 

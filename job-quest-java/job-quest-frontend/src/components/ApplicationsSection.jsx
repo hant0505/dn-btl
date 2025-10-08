@@ -136,8 +136,8 @@ const ApplicationsSection = () => {
     try {
       const response = await api.post(
         `/api/v1/applications/${item.id}`,
-        "Rejected",
-          { headers: { "Content-Type": "application/json" } }
+        { status: "Rejected" }, //HANTTTT
+        { headers: { "Content-Type": "application/json" } }
       );
 
       if (response.status === 200) {
