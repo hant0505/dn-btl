@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  my-mongo:
+    image: mongo:latest
+    container_name: my-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: yourpassword
+      MONGO_INITDB_DATABASE: jobquest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - jobquest-net
+
+  my-backend:
+    build: ./jobquestbackend
+    image: my-backend
+    container_name: my-backend-con
+    depends_on:
+      - my-mongo
+    environment:
+      SPRING_APPLICATION_NAME: job-quest-backend
+      SERVER_PORT: 8080
+      SPRING_DATA_MONGODB_URI: mongodb://root:yourpassword@my-mongo:27017/jobquest?authSource=admin
+      JWT_SECRET: mySuperSecretKey
+      JWT_EXPIRATION: 86400000
+    ports:
+      - "8080:8080"
+    networks:
+      - jobquest-net
+
+  my-frontend:
+    build:
+      context: ./job-quest-frontend
+    image: my-frontend
+    container_name: my-frontend-con
+    depends_on:
+      - my-backend
+    environment:
+      VITE_API_URL: "http://localhost:8080"
+    ports:
+      - "3000:80"
+    networks:
+      - jobquest-net
+
+volumes:
+  mongo-data:
+
+networks:
+  jobquest-net:
+    driver: bridge

@@ -21,7 +21,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/recruiters")
 // @CrossOrigin(origins = "https://job-quest-client.vercel.app")
-// @CrossOrigin(origins = "*") // tạm thời
+ @CrossOrigin(origins = "*") // tạm thời
 public class RecruiterController {
     @Autowired
     private RecruiterService recruiterService;
