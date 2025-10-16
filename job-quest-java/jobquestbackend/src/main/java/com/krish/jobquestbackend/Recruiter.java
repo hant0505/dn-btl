@@ -26,6 +26,12 @@ public class Recruiter {
     private String location;
     private List<ObjectId> jobIds;
 
+    private String authProvider;       // "local" | "auth0"
+    private String auth0Sub;           // nullable, unique (DB index sparse)
+    private Boolean ssoPreferred;      // default false
+    private String lastLoginProvider;  // "local" | "auth0"
+
+
     public Recruiter(String name, String email, String password, String company, String location, List<ObjectId> jobIds) {
         this.name = name;
         this.email = email;
@@ -54,6 +60,38 @@ public class Recruiter {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getAuthProvider() {
+        return authProvider;
+    }
+
+    public void setAuthProvider(String authProvider) {
+        this.authProvider = authProvider;
+    }
+
+    public String getAuth0Sub() {
+        return auth0Sub;
+    }
+
+    public void setAuth0Sub(String auth0Sub) {
+        this.auth0Sub = auth0Sub;
+    }
+
+    public Boolean getSsoPreferred() {
+        return ssoPreferred;
+    }
+
+    public void setSsoPreferred(Boolean ssoPreferred) {
+        this.ssoPreferred = ssoPreferred;
+    }
+
+    public String getLastLoginProvider() {
+        return lastLoginProvider;
+    }
+
+    public void setLastLoginProvider(String lastLoginProvider) {
+        this.lastLoginProvider = lastLoginProvider;
     }
 
     @JsonProperty("id")

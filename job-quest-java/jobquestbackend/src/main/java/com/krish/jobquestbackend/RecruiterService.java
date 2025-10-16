@@ -45,4 +45,30 @@ public class RecruiterService {
         recruiter.removeJobId(objectId);
         return recruiterRepository.save(recruiter);
     }
+
+    public Optional<Recruiter> findByEmail(String email) {
+        return recruiterRepository.findByEmail(email);
+    }
+
+    public Optional<Recruiter> findByAuth0Sub(String sub) {
+        return recruiterRepository.findByAuth0Sub(sub);
+    }
+
+    public Recruiter linkAuth0(Recruiter u, String sub, boolean remember) {
+        u.setAuth0Sub(sub);
+        if (remember) u.setSsoPreferred(true);
+        if (u.getAuthProvider() == null) u.setAuthProvider("local");
+        return recruiterRepository.save(u); // ✅ LƯU DB
+    }
+
+    public void unlinkAuth0(Recruiter u) {
+        u.setAuth0Sub(null);
+        u.setSsoPreferred(false);
+        recruiterRepository.save(u); // ✅ LƯU DB
+    }
+
+    public void updateLastLoginProvider(Recruiter u, String provider) {
+        u.setLastLoginProvider(provider);
+        recruiterRepository.save(u); // ✅ LƯU DB
+    }
 }

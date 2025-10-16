@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface RecruiterRepository extends MongoRepository<Recruiter, ObjectId> {
     Optional<Recruiter> findByEmail(String email);
+    Optional<Recruiter> findByAuth0Sub(String auth0Sub);
 }
