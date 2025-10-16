@@ -63,7 +63,18 @@ public class RecruiterController {
         if (existingRecruiter.isPresent()) {
             return new ResponseEntity<>("Email already taken", HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(recruiterService.createRecruiter(recruiter), HttpStatus.CREATED);
+
+        Recruiter created = recruiterService.createRecruiter(recruiter);
+
+        // ⭐ Tạo JWT ngay sau khi tạo tài khoản
+        String token = jwtTokenProvider.createToken(created.getEmail(), "RECRUITER");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("token", token);
+        body.put("recruiter", created);
+
+        // 201 Created kèm token để FE lưu thẳng và coi như đã login
+        return new ResponseEntity<>(body, HttpStatus.CREATED);
     }
 
     // ⭐ Stateless login: xác thực + trả JWT nội bộ (HS256)

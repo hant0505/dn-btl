@@ -43,8 +43,19 @@ public class CandidateController {
         if (existingCandidate.isPresent()) {
             return new ResponseEntity<>("Email already taken", HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(candidateService.createCandidate(candidate), HttpStatus.CREATED);
+
+        Candidate created = candidateService.createCandidate(candidate);
+
+        // ⭐ Tạo JWT ngay sau khi tạo tài khoản
+        String token = jwtTokenProvider.createToken(created.getEmail(), "CANDIDATE");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("token", token);
+        body.put("candidate", created);
+
+        return new ResponseEntity<>(body, HttpStatus.CREATED);
     }
+
 
     // ⭐ Stateless login: xác thực + trả JWT nội bộ (HS256)
     @PostMapping("/login")

@@ -62,7 +62,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
-        cfg.setAllowedOrigins(List.of("http://localhost:5174", "http://127.0.0.1:5174", "http://localhost:5174"));
+        cfg.setAllowedOrigins(List.of("http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5173"));
         cfg.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setAllowCredentials(true);
@@ -86,6 +86,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/candidates/login", "/api/v1/candidates/signup").permitAll()
                         .requestMatchers("/api/v1/recruiters/login", "/api/v1/recruiters/signup").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/applications/**").permitAll()
+
 
                         // public data bạn muốn cho khách xem:
                         .requestMatchers(HttpMethod.GET, "/api/v1/jobs/**").permitAll()

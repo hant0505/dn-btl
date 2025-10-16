@@ -2,12 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import Creatable from "react-select/creatable";
-
 import { login as storeLogin } from "../../store/authSlice";
 import api from "../../api/axiosConfig";
 import { skillOptions } from "../../data/constants";
-
-
 
 const CandidateRegisterForm = () => {
   const dispatch = useDispatch();
@@ -18,33 +15,40 @@ const CandidateRegisterForm = () => {
   const [error, setError] = useState("");
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");   // sẽ được prefill từ SSO
+  const [email, setEmail] = useState(""); // có thể prefill từ SSO
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [skills, setSkills] = useState([]);
 
-
-  useEffect(() => {
-    if (isAuthenticated) navigate("/");
-  }, [isAuthenticated, navigate]);
+  useEffect(() => { if (isAuthenticated) navigate("/"); }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
-    const skillsArray = skills.map((item) => item.value);
-    const formData = { name, email, password, skills: skillsArray };
     setIsLoading(true);
 
     try {
-      const response = await api.post("/api/v1/candidates/signup", formData);
-      if (response.status === 201) {
-        dispatch(storeLogin({ isRecruiter: false, userData: response.data }));
-        navigate("/");
+      const skillsArray = skills.map((s) => s.value);
+      const res = await api.post("/api/v1/candidates/signup", {
+        name, email, password, skills: skillsArray,
+      });
+
+      if (res.status === 201) {
+        const { token, candidate } = res.data || {};
+        if (token) localStorage.setItem("token", token);
+
+        dispatch(
+            storeLogin({
+              isRecruiter: false,
+              userData: candidate, // ✅ chỉ profile
+            })
+        );
+
+        navigate("/", { replace: true });
       }
     } catch (err) {
-      console.log(err);
-      setError("Something went wrong!");
+      console.error(err);
+      setError(err?.response?.data || "Something went wrong!");
     } finally {
       setIsLoading(false);
     }
@@ -55,43 +59,45 @@ const CandidateRegisterForm = () => {
           onSubmit={handleSubmit}
           className="p-14 mb-24 bg-slate-800 w-full max-w-md 2xl:max-w-xl rounded-lg flex flex-col gap-4 2xl:gap-10 mx-auto"
       >
-        <h1 className="text-3xl 2xl:text-5xl font-bold text-white text-center mb-8 2xl:mb-12">
-          Candidate Signup
-        </h1>
+        <h1 className="text-3xl 2xl:text-5xl font-bold text-white text-center mb-8 2xl:mb-12">Candidate Signup</h1>
 
-        <input type="text" placeholder="Name" value={name}
-               onChange={(e) => setName(e.target.value)}
-               className="w-full py-2 px-4 text-lg rounded-lg text-black/80 font-semibold" required />
+        <input className="w-full py-2 px-4 text-lg rounded-lg text-black/80 font-semibold"
+               type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
 
-        <input type="email" placeholder="Email" value={email}
-               onChange={(e) => setEmail(e.target.value)}
-               className="w-full py-2 px-4 text-lg rounded-lg text-black/80 font-semibold" required />
+        <input className="w-full py-2 px-4 text-lg rounded-lg text-black/80 font-semibold"
+               type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
 
-        <input type="password" placeholder="Password" value={password}
-               onChange={(e) => setPassword(e.target.value)}
-               className="w-full py-2 px-4 text-lg rounded-lg text-black/80 font-semibold" required />
+        <input className="w-full py-2 px-4 text-lg rounded-lg text-black/80 font-semibold"
+               type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
 
-        <input type="password" placeholder="Confirm Password" value={confirmPassword}
-               onChange={(e) => setConfirmPassword(e.target.value)}
-               className={`w-full py-2 px-4 text-lg rounded-lg text-black/80 font-semibold ${
-                   password === confirmPassword ? "border-green-500 outline-green-500" : confirmPassword && "border-red-500 outline-red-500"
-               }`} required />
+        <input
+            className={`w-full py-2 px-4 text-lg rounded-lg text-black/80 font-semibold ${
+                password === confirmPassword
+                    ? "border-green-500 outline-green-500"
+                    : confirmPassword && "border-red-500 outline-red-500"
+            }`}
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+        />
 
         <div className="mt-6">
           <h3 className="text-lg text-white mb-1 font-medium">Skills</h3>
-          <Creatable options={skillOptions} isMulti value={skills}
-                     onChange={(selected) => setSkills(selected)} />
+          <Creatable isMulti options={skillOptions} value={skills} onChange={setSkills} />
         </div>
 
-
-        <button type="submit"
-                disabled={isLoading || !name || !email || !password || !confirmPassword || password !== confirmPassword}
-                className={`py-2 px-4 my-10 bg-green-500 hover:opacity-70 rounded-lg text-white text-lg font-semibold transition-opacity ${
-                    (isLoading || !name || !email || !password || !confirmPassword || password !== confirmPassword) && "opacity-30 hover:opacity-40"
-                }`}
+        <button
+            type="submit"
+            disabled={isLoading || !name || !email || !password || !confirmPassword || password !== confirmPassword}
+            className={`py-2 px-4 my-10 bg-green-500 hover:opacity-70 rounded-lg text-white text-lg font-semibold transition-opacity ${
+                (isLoading || !name || !email || !password || !confirmPassword || password !== confirmPassword) && "opacity-30 hover:opacity-40"
+            }`}
         >
-          Register
+          {isLoading ? "Registering..." : "Register"}
         </button>
+
         <p className="text-red-500 text-center text-lg font-black">{error}</p>
 
         <p className="text-secondary text-center">
@@ -104,5 +110,3 @@ const CandidateRegisterForm = () => {
 };
 
 export default CandidateRegisterForm;
-
-
