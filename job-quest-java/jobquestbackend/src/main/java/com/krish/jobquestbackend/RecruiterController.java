@@ -1,19 +1,28 @@
 package com.krish.jobquestbackend;
 
-import org.bson.types.ObjectId;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/recruiters")
-// Có thể bỏ @CrossOrigin ở đây nếu đã cấu hình CORS global
+// @CrossOrigin(origins = "https://job-quest-client.vercel.app")
+ @CrossOrigin(origins = "*") // tạm thời
 public class RecruiterController {
-
     @Autowired
     private RecruiterService recruiterService;
 
@@ -21,27 +30,25 @@ public class RecruiterController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private AuthenticationManager authenticationManager;
 
     @GetMapping
     public ResponseEntity<List<Recruiter>> getAllRecruiters() {
-        return new ResponseEntity<>(recruiterService.allRecruiters(), HttpStatus.OK);
+        return new ResponseEntity<List<Recruiter>>(recruiterService.allRecruiters(), HttpStatus.OK);
     }
-
-    // ⭐ Thêm endpoint test
+        // ⭐ Thêm endpoint test
     @GetMapping("/test")
     public String test() {
         return "Working!";
     }
-
     //    TO BE REMOVED LATER, USING JUST FOR TESTING PURPOSES
     @GetMapping("/{email}")
     public ResponseEntity<Optional<Recruiter>> getSingleRecruiter(@PathVariable String email) {
-        return new ResponseEntity<>(recruiterService.singleRecruiter(email), HttpStatus.OK);
+        return new ResponseEntity<Optional<Recruiter>>(recruiterService.singleRecruiter(email), HttpStatus.OK);
     }
-
-    @PostMapping("/{email}/appendjob")
-    public ResponseEntity<?> appendJob(@PathVariable String email, @RequestBody Map<String, String> body) {
+    // ⭐⭐⭐⭐⭐
+        @PostMapping("/{email}/appendjob")
+        public ResponseEntity<?> appendJob(@PathVariable String email, @RequestBody Map<String, String> body) {
         try {
             String jobId = body.get("jobId");
             Recruiter updatedRecruiter = recruiterService.addJobToRecruiter(email, jobId);
@@ -52,59 +59,72 @@ public class RecruiterController {
         }
     }
 
+    // @PostMapping("/{email}/appendjob")
+    // public ResponseEntity<?> appendJob(@PathVariable String email, @RequestBody String jobId) {
+    //     try {
+    //         return new ResponseEntity<Recruiter>(recruiterService.addJobToRecruiter(email, jobId), HttpStatus.OK);
+    //     } catch (Exception e) {
+    //         return new ResponseEntity<String>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
+
     @PostMapping("/{email}/removejob")
     public ResponseEntity<Recruiter> removeJob(@PathVariable String email, @RequestBody String jobId) {
-        return new ResponseEntity<>(recruiterService.removeJobFromRecruiter(email, jobId), HttpStatus.OK);
+        return new ResponseEntity<Recruiter>(recruiterService.removeJobFromRecruiter(email, jobId), HttpStatus.OK);
     }
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody Recruiter recruiter) {
         Optional<Recruiter> existingRecruiter = recruiterService.singleRecruiter(recruiter.getEmail());
         if (existingRecruiter.isPresent()) {
-            return new ResponseEntity<>("Email already taken", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<String>("Email already taken", HttpStatus.BAD_REQUEST);
         }
 
-        Recruiter created = recruiterService.createRecruiter(recruiter);
-
-        // ⭐ Tạo JWT ngay sau khi tạo tài khoản
-        String token = jwtTokenProvider.createToken(created.getEmail(), "RECRUITER");
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("token", token);
-        body.put("recruiter", created);
-
-        // 201 Created kèm token để FE lưu thẳng và coi như đã login
-        return new ResponseEntity<>(body, HttpStatus.CREATED);
+        return new ResponseEntity<Recruiter>(recruiterService.createRecruiter(recruiter), HttpStatus.CREATED);
     }
 
-    // ⭐ Stateless login: xác thực + trả JWT nội bộ (HS256)
+
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> payload) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> payload, HttpServletRequest httpServletRequest) {
         String email = payload.get("email");
         String password = payload.get("password");
 
-        Optional<Recruiter> recruiterOpt = recruiterService.singleRecruiter(email);
-        if (recruiterOpt.isEmpty()) {
-            return new ResponseEntity<>(Map.of("error", "Email not found"), HttpStatus.NOT_FOUND);
+        try {
+            Optional<Recruiter> recruiter = recruiterService.singleRecruiter(email);
+            if (recruiter.isEmpty()) {
+                return new ResponseEntity<Map<String, Object>>(Map.of("error", "Email not found"), HttpStatus.NOT_FOUND);
+            }
+
+            String hashedPassword = recruiter.get().getPassword();
+
+            if (!passwordEncoder.matches(password, hashedPassword)) {
+                return new ResponseEntity<Map<String, Object>>(Map.of("error", "Wrong password"), HttpStatus.UNAUTHORIZED);
+            }
+
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, password);
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+            HttpSession session = httpServletRequest.getSession(true);
+
+            Map<String, Object> responseBody = new HashMap<>();
+            responseBody.put("token", session.getId());
+            responseBody.put("recruiter", recruiter);
+
+            return new ResponseEntity<Map<String, Object>>(responseBody, HttpStatus.OK);
+        } catch (AuthenticationException e) {
+            return new ResponseEntity<Map<String, Object>>(Map.of("error", "Authentication error"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        Recruiter recruiter = recruiterOpt.get();
-        if (!passwordEncoder.matches(password, recruiter.getPassword())) {
-            return new ResponseEntity<>(Map.of("error", "Wrong password"), HttpStatus.UNAUTHORIZED);
-        }
-
-        String token = jwtTokenProvider.createToken(recruiter.getEmail(), "RECRUITER");
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("token", token);
-        body.put("recruiter", recruiter);
-
-        return new ResponseEntity<>(body, HttpStatus.OK);
     }
 
-    // ⭐ Stateless logout: FE tự xóa token, BE trả OK
     @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
-        return new ResponseEntity<>("Logged out", HttpStatus.OK);
+    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
+        SecurityContextHolder.clearContext();
+
+        return new ResponseEntity<String>("Logged out successfully", HttpStatus.OK);
     }
 }

@@ -1,17 +1,13 @@
 import axios from "axios";
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080", // tuỳ bạn
+// ƯU TIÊN đọc từ window.ENV (runtime), fallback về import.meta.env (build time)
+const baseURL = window.ENV?.API_URL || import.meta.env.VITE_API_URL || "http://localhost:8080";
+
+console.log("API URL:huhuhuVITE", baseURL);
+
+export default axios.create({
+  baseURL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
-
-// Gắn token Bearer từ localStorage
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-export default api;
-
