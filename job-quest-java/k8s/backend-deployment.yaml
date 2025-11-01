@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: asia-southeast1-docker.pkg.dev/jobquest-cloud-2025/jobquest-repo/my-backend:latest
+          imagePullPolicy: Always
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: job-quest-backend
+            - name: SERVER_PORT
+              value: "8080"
+            - name: SPRING_DATA_MONGODB_URI
+              value: mongodb://root:yourpassword@mongo-service:27017/jobquest?authSource=admin
+            - name: JWT_SECRET
+              value: mySuperSecretKey
+            - name: JWT_EXPIRATION
+              value: "86400000"
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
