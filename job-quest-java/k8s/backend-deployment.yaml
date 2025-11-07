@@ -14,6 +14,7 @@ spec:
     spec:
       containers:
         - name: backend
+          ## trước đấy là asia-southeast1-docker.pkg.dev/jobquest-cloud-2025/jobquest-repo/my-backend:latest
           image: asia-southeast1-docker.pkg.dev/jobquest-cloud-2025/jobquest-repo/my-backend:latest
           imagePullPolicy: Always
           env:
@@ -21,8 +22,6 @@ spec:
               value: job-quest-backend
             - name: SERVER_PORT
               value: "8080"
-            - name: SPRING_DATA_MONGODB_URI
-              value: mongodb://root:yourpassword@mongo-service:27017/jobquest?authSource=admin
             - name: JWT_SECRET
               value: mySuperSecretKey
             - name: JWT_EXPIRATION
