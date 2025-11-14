@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-// test
+// test argocd
 import java.util.List;
 
 @Document(collection = "jobs")
