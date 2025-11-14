@@ -73,8 +73,8 @@ jobs:
 
       - name: Update K8s manifests
         run: |
-          sed -i "s|image: .*/jobquest-backend:.*|image: ${DOCKER_USERNAME}/jobquest-backend:ha1|" job-quest-java\k8s\backend-deployment.yaml
-          sed -i "s|image: .*/jobquest-frontend:.*|image: ${DOCKER_USERNAME}/jobquest-frontend:ha1|" job-quest-java\k8s\frontend-deployment.yaml
+          sed -i "s|image: .*/jobquest-backend:.*|image: ${DOCKER_USERNAME}/jobquest-backend:ha1|" ./job-quest-java/k8s/backend-deployment.yaml
+          sed -i "s|image: .*/jobquest-frontend:.*|image: ${DOCKER_USERNAME}/jobquest-frontend:ha1|" ./job-quest-java/k8s/frontend-deployment.yaml
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
