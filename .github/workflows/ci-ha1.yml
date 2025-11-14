@@ -51,7 +51,7 @@ jobs:
 
       - name: Build Docker image (frontend)
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/jobquest-frontend:ha1 ./job-quest-frontend
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/jobquest-frontend:ha1 ./job-quest-java/job-quest-frontend
 
       - name: Push Docker image
         run: |
