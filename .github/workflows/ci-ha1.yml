@@ -7,7 +7,7 @@ on:
   workflow_dispatch:  # Cho phép chạy thủ công
 
 jobs:
-  build-and-push:
+  backend-docker-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -35,3 +35,37 @@ jobs:
 
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/jobquest-backend:ha1
+
+  build-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            node-modules-
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        working-directory: ./job-quest-java/job-quest-frontend
+        run: npm install
+
+      - name: Build frontend
+        working-directory: ./job-quest-java/job-quest-frontend
+        run: npm run build
+
+      - name: Build & push frontend Docker image
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/jobquest-frontend:ha1 ./job-quest-java/job-quest-frontend
+          docker push ${{ secrets.DOCKER_USERNAME }}/jobquest-frontend:ha1
