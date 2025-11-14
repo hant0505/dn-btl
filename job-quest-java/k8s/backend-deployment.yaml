@@ -15,7 +15,7 @@ spec:
       containers:
         - name: backend
           ## trước đấy là asia-southeast1-docker.pkg.dev/jobquest-cloud-2025/jobquest-repo/my-backend:latest
-          image: asia-southeast1-docker.pkg.dev/jobquest-cloud-2025/jobquest-repo/my-backend:latest
+          image: hant0505/jobquest-backend:ha1
           imagePullPolicy: Always
           env:
             - name: SPRING_APPLICATION_NAME

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: asia-southeast1-docker.pkg.dev/jobquest-cloud-2025/jobquest-repo/my-frontend:latest
+          image: hant0505/jobquest-frontend:ha1
           imagePullPolicy: Always
           # dùng image local
           env:
